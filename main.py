@@ -1,9 +1,10 @@
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-
+from fastapi.testclient import TestClient
+from main import app
 from url_shortener import shorten_url, get_original_url
-
+client = TestClient(app)
 app = FastAPI()
 
 
@@ -24,6 +25,15 @@ def expand_short_url(short_code: str):
         raise HTTPException(status_code=404, detail="Short code not found")
     return {"original_url": original_url}
 
+def test_shorten_and_expand():
+    long_url = "https://example.com"
+    response = client.post("/shorten", json={"url": long_url})
+    assert response.status_code == 200
+    short_code = response.json()["short_code"]
+
+    response = client.get(f"/{short_code}")
+    assert response.status_code == 200
+    assert response.json()["url"] == long_url
 # from fastapi import FastAPI, Request
 # from pydantic import BaseModel
 
